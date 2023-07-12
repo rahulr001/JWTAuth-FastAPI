@@ -8,4 +8,5 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed_password: str) -> str:
+    print(password, "===", hashed_password)
     return context.verify(password, hashed_password)
