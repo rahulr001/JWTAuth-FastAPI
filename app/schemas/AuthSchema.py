@@ -20,3 +20,7 @@ class User_Creation_Schema(BaseModel):
 class User_Login_Schema(BaseModel):
     email: EmailStr
     password: constr(max_length=8)
+
+
+class Refresh_Token(BaseModel):
+    refresh_token: str
