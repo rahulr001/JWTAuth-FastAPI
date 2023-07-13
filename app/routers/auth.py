@@ -4,8 +4,7 @@ from random import randbytes
 from datetime import datetime, timedelta
 from utils.database import User
 from serializers.AuthSerializer import UserEntity
-from utils.auth_config import hash_password, verify_password
-from fastapi import APIRouter, Request, Depends, HTTPException, status
+from fastapi import APIRouter, Request, Depends, HTTPException, status, Response
 from schemas.AuthSchema import User_Creation_Schema, User_Login_Schema, Refresh_Token
 from utils.jwt_auth import AuthJWT
 from utils.config import JWT_ALGORITHM, REFRESH_SECRET_KEY
@@ -23,7 +22,7 @@ async def register(request: Request, data: User_Creation_Schema):
     if data.password != data.password1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail='password missmatch')
-    data.password = hash_password(data.password)
+    data.password = AuthJWT.hash_password(data.password)
     del data.password1
     data.created_at = data.updated_at = datetime.utcnow()
     result = User.insert_one(data.dict())
@@ -48,7 +47,7 @@ async def login(data: User_Login_Schema):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Incorrect Email or Password')
     user = UserEntity(db_user)
-    verify_pass = verify_password(data.password, user['password'])
+    verify_pass = AuthJWT.verify_password(data.password, user['password'])
 
     if not verify_pass:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -71,3 +70,9 @@ async def refresh(data: Refresh_Token):
             status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Refresh Token Invalid")
     access_token = AuthJWT.generate_access_token(user_id['sub'])
     return {'status': 'success', 'access_token': access_token}
+
+
+@router.post('test')
+async def test(data: Response):
+    data.set_cookie('test','test')
+    print(dir(data))
